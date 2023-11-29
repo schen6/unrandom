@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 MEDIA_URL = '/photos/'
@@ -44,7 +45,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'kol.apps.KolappConfig'
+    # 'kol.apps.KolappConfig',
+    'kol',
+    'accounts',
+    'groups'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -87,11 +91,11 @@ WSGI_APPLICATION = 'unrandom.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'testdb',
-        'USER': 'sail',
+        'NAME': 'unrandom',
+        'USER': 'postgres',
         'PASSWORD': '414bcissiC',
-        'HOST': 'unrandom.co',
-        'PORT': '5432',
+        'HOST': '192.168.1.9',
+        'PORT': '5433',
         'OPTIONS': {
             'options': '-c search_path=unrandom',
         }
@@ -139,3 +143,23 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    # 'EXCEPTION_HANDLER': 'my_project.my_app.utils.custom_exception_handler',
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # 'PAGE_SIZE': 10  # You can set your desired page size here
+}
+
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+#     # ... other configurations
+# }
