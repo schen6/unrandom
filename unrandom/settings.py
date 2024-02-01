@@ -53,6 +53,19 @@ INSTALLED_APPS = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+# This is needed if front and backend are on different domains
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:9000',  # Adjust with your frontend domain
+    'http://localhost:8000',
+    'http://unrandom.co:9000',
+]
+
+# ALLOWED_HOSTS = [
+#     'localhost',
+# ]
+
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -127,7 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -146,6 +159,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+
+AUTHENTICATION_BACKENDS = [
+    # ... (keep your other backends if any)
+    'accounts.backends.EmailOrUsernameModelBackend',  # Update 'myapp' to your app name
+]
+
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -158,6 +178,19 @@ REST_FRAMEWORK = {
     # 'PAGE_SIZE': 10  # You can set your desired page size here
 }
 
+CSRF_COOKIE_SAMESITE = 'Strict'
+CSRF_COOKIE_HTTPONLY = False
+# CSRF_COOKIE_SECURE = True  # True if you're using HTTPS, otherwise False
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:9000',
+    'http://localhost:8000',
+    'http://unrandom.co:9000',
+]
+SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_HTTPONLY = True
+
+
+# CSRF_COOKIE_DOMAIN = "api.example.com"  # Set this if your frontend and backend are on different domains
 # SIMPLE_JWT = {
 #     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
 #     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),

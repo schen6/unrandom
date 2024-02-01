@@ -1,14 +1,17 @@
-from django.urls import re_path
+from django.urls import re_path, path
 from kol import views
 
 from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-
-    re_path(r'api/profile/([0-9]+)$', views.ProfileApi),
-    re_path(r'api/profile/$', views.ProfileApi),
-    re_path(r'api/autocomplete/$', views.autocomplete_search),
+    path('profile/', views.ProfileApi),
+    # re_path(r'profile/([0-9]+)$', views.ProfileApi),
+    # re_path(r'profile/$', views.ProfileApi),
+    path('autocomplete/', views.autocomplete_search),
+    path('post/', views.PostApi),
+    path('analytics/group/', views.group_post_analytics_view),
+    path('analytics/translate/', views.get_translate),
 
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

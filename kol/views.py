@@ -3,30 +3,70 @@
 # from rest_framework.parsers import JSONParser
 # from django.http.response import JsonResponse
 # from django.http import Http404
+import sys
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from kol.models import Profile #Brand, Attribute, Product , KolBasicData,
-from kol.serializers import ProfileSerializer, AutocompleteProfileSerializer #BrandSerializer, AttributeSerializer, ProductSerializer #, KolBasicDataSerializer,
+from kol.models import Profile, Post #Brand, Attribute, Product , KolBasicData,
+from kol.serializers import ProfileSerializer, AutocompleteProfileSerializer, PostSerializer #BrandSerializer, AttributeSerializer, ProductSerializer #, KolBasicDataSerializer,
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.db import connection
 from core.decorators import standardize_api_response
 # Create your views here.
+from .services import get_group_post_analytics, translate
+import json
+
+
+@api_view(['POST'])
+def get_translate(request):
+    try:
+
+        text_to_translate = request.data.get('text', '')
+        translated_text = translate(text_to_translate)  # Function from your Python script
+        return Response({'text_en': translated_text})
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
+@api_view(['GET'])
+def group_post_analytics_view(request):
+    group_id = request.query_params.get('group_id', None)
+    aggregation = request.query_params.get('aggregation', 'Day')
+    range_days = request.query_params.get('range', 90)
+
+    if group_id is not None:
+        try:
+            group_id = int(group_id)  # Convert to integer
+            range_days = int(range_days)  # Convert range to integer
+
+            analytics = get_group_post_analytics(group_id, aggregation, range_days)
+            return JsonResponse(analytics, safe=False)
+
+        except ValueError as e:
+            # Handle value errors for group_id and range_days
+            return HttpResponseBadRequest(f"Invalid parameter: {e}")
+
+        except Exception as e:
+            # Handle other exceptions, possibly log them
+            return HttpResponseBadRequest(str(e))
+
+    return HttpResponseBadRequest("group_id parameter is required")
 
 
 @api_view(['GET'])
-@standardize_api_response
-def ProfileApi(request, id=0):
+# @standardize_api_response
+def ProfileApi(request):
     paginator = PageNumberPagination()
-    paginator.page_size = 10  # You can adjust the page size here
+    query = request.query_params.get('query', None)
+    paginator.page_size = request.query_params.get('size', 25)
+    id = request.query_params.get('uid', 0)
+    sort = request.query_params.get('sort', '')
+    # paginator.page_size = 25  # Adjust the page size here
 
     if request.method == 'GET':
-        # Search functionality
-        username = request.query_params.get('username', None)
-        if username:
-            profiles = Profile.objects.filter(username__icontains=username)
-        elif id == 0:
-            profiles = Profile.objects.all()
-        else:
+        # Fetch query parameter
+        if id:
             try:
                 profile = Profile.objects.get(pk=id)
                 profile_serializer = ProfileSerializer(profile)
@@ -34,14 +74,26 @@ def ProfileApi(request, id=0):
             except Profile.DoesNotExist:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-        # Pagination is applied here
+        if query:
+            profiles = Profile.objects.filter(username__icontains=query)
+        else:
+            profiles = Profile.objects.all()
+
+        # Apply sorting
+        sort_fields = sort.split(',') if sort else []
+        if len(sort_fields) == 2:
+            sort_field, sort_order = sort_fields
+            sort_field = '-' + sort_field if sort_order == 'desc' else sort_field
+            profiles = profiles.order_by(sort_field)
+
+        # Apply pagination
         result_page = paginator.paginate_queryset(profiles, request)
         profile_serializer = ProfileSerializer(result_page, many=True)
         return paginator.get_paginated_response(profile_serializer.data)
 
 
 @api_view(['GET'])
-@standardize_api_response
+# @standardize_api_response
 def autocomplete_search(request):
     query = request.query_params.get('query', '')
     if query:
@@ -57,6 +109,56 @@ def autocomplete_search(request):
         return Response(serializer.data)
 
     return Response([])
+
+@api_view(['GET'])
+def PostApi(request):
+    paginator = PageNumberPagination()
+    query = request.query_params.get('query', '')
+    post_id = request.query_params.get('id', None)
+    uid = request.query_params.get('uid', None)
+    paginator.page_size = request.query_params.get('size', 25)
+
+    if query:
+        # Full-text search across multiple columns
+        raw_sql = """
+                SELECT * FROM kol_post 
+                WHERE title &@ %s OR summary &@ %s OR content &@ %s OR ocr_content &@ %s OR vid_to_text &@ %s;
+            """
+        with connection.cursor() as cursor:
+            cursor.execute(raw_sql, [query, query, query, query, query])
+            columns = [col[0] for col in cursor.description]
+            rows = [
+                dict(zip(columns, row))
+                for row in cursor.fetchall()
+            ]
+
+        # Handle pagination
+        page = paginator.paginate_queryset(rows, request)
+        if page is not None:
+            serializer = PostSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+    elif post_id:
+        # Fetch a specific post by ID
+        try:
+            post = Post.objects.get(pk=post_id)
+            serializer = PostSerializer(post)
+            return Response(serializer.data)
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Fetch all posts by a specific user
+    try:
+        posts = Post.objects.filter(uid=uid)
+        page = paginator.paginate_queryset(posts, request)
+        serializer = PostSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+    except Post.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Fallback if pagination is not applicable
+    serializer = PostSerializer(rows, many=True)
+    return Response(serializer.data)
 
 # @csrf_exempt
 # def generic_tag_api(request, tag_model, tag_serializer, id_field_name, tag_id=0):
