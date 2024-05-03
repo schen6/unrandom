@@ -17,11 +17,11 @@ class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
-    # @standardize_api_response
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            login(request, user)  # Log in the user after successful registration
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

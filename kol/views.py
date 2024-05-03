@@ -110,6 +110,7 @@ def autocomplete_search(request):
 
     return Response([])
 
+
 @api_view(['GET'])
 def PostApi(request):
     paginator = PageNumberPagination()

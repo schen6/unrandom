@@ -2,11 +2,12 @@ from django.db import models
 
 # Create your models here.
 
+
 class Profile(models.Model):
     uid = models.BigIntegerField(primary_key=True)
-    douyin_sec_uid = models.CharField(null=True)
-    xintu_id = models.BigIntegerField(null=True)
-    douyin_unique_id = models.CharField(null=True, blank=True)
+    # douyin_sec_uid = models.CharField(null=True)
+    # xintu_id = models.BigIntegerField(null=True)
+    # douyin_unique_id = models.CharField(null=True, blank=True)
     username = models.CharField(max_length=500, db_index=True)
     gender = models.CharField(max_length=1, blank=True, null=True)
     platform = models.CharField(max_length=20)
@@ -16,20 +17,20 @@ class Profile(models.Model):
     followers = models.BigIntegerField(null=True)
     signature = models.TextField(blank=True)
     enterprise = models.CharField(max_length=200, blank=True)
-    followers_growth = models.FloatField(null=True)
-    posts_per_week = models.FloatField(null=True)
-    price_60 = models.FloatField(null=True)
-    price_1_20 = models.FloatField(null=True)
-    price_20_60 = models.FloatField(null=True)
-    cpm = models.FloatField(null=True)
-    cpe = models.FloatField(null=True)
-    avg_plays = models.BigIntegerField(null=True)
-    avg_engagement = models.BigIntegerField(null=True)
-    engagement_rate = models.FloatField(null=True)
-    avg_duration = models.BigIntegerField(null=True)
-    view_completion_rate = models.FloatField(null=True)
-    gmv = models.BigIntegerField(null=True)
-
+    post_count = models.BigIntegerField(null=True)
+    # followers_growth = models.FloatField(null=True)
+    # posts_per_week = models.FloatField(null=True)
+    # price_60 = models.FloatField(null=True)
+    # price_1_20 = models.FloatField(null=True)
+    # price_20_60 = models.FloatField(null=True)
+    # cpm = models.FloatField(null=True)
+    # cpe = models.FloatField(null=True)
+    # avg_plays = models.BigIntegerField(null=True)
+    # avg_engagement = models.BigIntegerField(null=True)
+    # engagement_rate = models.FloatField(null=True)
+    # avg_duration = models.BigIntegerField(null=True)
+    # view_completion_rate = models.FloatField(null=True)
+    # gmv = models.BigIntegerField(null=True)
 
     def __str__(self):
         return f"{self.platform} - {self.uid}"

@@ -7,10 +7,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = [
             'uid', 'username','platform', 'signature', 'enterprise', 'avataruri', 'city',
-            'province', 'gender', 'followers', 'followers_growth', 'posts_per_week',
-            'price_60', 'price_1_20', 'price_20_60', 'cpm', 'cpe', 'avg_plays',
-            'avg_engagement', 'engagement_rate', 'avg_duration',
-            'view_completion_rate', 'gmv'
+            'province', 'gender', 'followers', 'post_count'
         ]
 
 
